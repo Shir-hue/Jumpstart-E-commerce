@@ -1,0 +1,108 @@
+/* Custom Dark Theme Styles for Professional E-commerce Look */
+
+/* Global background for dark theme */
+body {
+  background-color: #111827; /* gray-900 */
+  color: #f9fafb; /* gray-50 */
+}
+
+/* Smooth transitions for sticky navbar */
+.sticky-navbar {
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+/* Custom animation delays */
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Enhanced hover effects for navigation items */
+.nav-item:hover {
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+/* Professional dropdown animations */
+.dropdown-menu {
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+}
+
+.dropdown-menu.visible {
+  transform: translateY(0);
+}
+
+/* Enhanced focus states for accessibility - Dark theme */
+input:focus {
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.3);
+}
+
+/* Professional loading states - Dark theme */
+.loading-shimmer {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #4b5563, #6b7280);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #6b7280, #9ca3af);
+}
+
+/* Dark theme text selection */
+::selection {
+  background-color: #4b5563;
+  color: #f9fafb;
+}
+
+/* Dark theme form inputs */
+input, textarea, select {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Dark theme button styles */
+.btn-primary {
+  background: linear-gradient(to right, #4b5563, #374151);
+  border: 1px solid #6b7280;
+  color: #f9fafb;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(to right, #6b7280, #4b5563);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
