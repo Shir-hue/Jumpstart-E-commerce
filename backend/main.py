@@ -28,11 +28,19 @@ app.add_middleware(
 
 # Initialize Gemini client
 gemini_model = None
-if os.getenv("GEMINI_API_KEY"):
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
-    AI_ENABLED = True
+api_key = os.getenv("GEMINI_API_KEY")
+print(f"🔍 Debug: API Key present: {bool(api_key)}, Length: {len(api_key) if api_key else 0}")
+if api_key:
+    try:
+        genai.configure(api_key=api_key)
+        gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+        AI_ENABLED = True
+        print("✅ Gemini AI initialized successfully!")
+    except Exception as e:
+        print(f"❌ Failed to initialize Gemini: {e}")
+        AI_ENABLED = False
 else:
+    print("⚠️ No GEMINI_API_KEY found in environment")
     AI_ENABLED = False
 
 # Pydantic models
@@ -128,10 +136,10 @@ def generate_gemini_description(request: DescriptionRequest) -> str:
                 {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"}
             ],
             generation_config={
-                "temperature": 0.8,  
-                "max_output_tokens": 100, 
-                "top_p": 0.9,
-                "top_k": 40
+                "temperature": 1.0,  
+                "max_output_tokens": 120, 
+                "top_p": 0.95,
+                "top_k": 50
             }
         )
         
@@ -167,23 +175,59 @@ def create_ai_prompt(product: ProductFeatures, style: str, length: str) -> str:
     return selected_prompt
 
 def generate_template_description(product: ProductFeatures, style: str) -> str:
-    """Generate unique, varied descriptions for each category (fallback when AI is not available)"""
+    """Generate unique, varied descriptions for each category with randomization (fallback when AI is not available)"""
     
-    # Unique, varied templates for each category - short and practical like Amazon/Lazada
-    templates = {
-        "shoes": f"{product.brand} {product.name} - {' & '.join(product.features[:2])}. Great for running, walking, or casual outings. Now ${product.price}.",
+    import random
+    
+    # Multiple template variations for each category
+    templates_by_category = {
+        "shoes": [
+            f"{product.brand} {product.name} - {' & '.join(product.features[:2])}. Great for running, walking, or casual outings. Now ${product.price}.",
+            f"Step up your style with {product.brand} {product.name}. Features {', '.join(product.features[:2]).lower()}. Perfect for everyday wear. ${product.price}.",
+            f"Comfortable {product.name} by {product.brand}. Built with {' and '.join(product.features[:2]).lower()}. All-day comfort guaranteed. Only ${product.price}.",
+            f"{product.brand} {product.name} combines {' with '.join(product.features[:2]).lower()}. Ideal for active lifestyles. Special price: ${product.price}."
+        ],
         
-        "shirts": f"Premium {product.brand} {product.name} with {', '.join(product.features[:2]).lower()}. Machine washable. Size range available. Price: ${product.price}.",
+        "shirts": [
+            f"Premium {product.brand} {product.name} with {', '.join(product.features[:2]).lower()}. Machine washable. Size range available. Price: ${product.price}.",
+            f"Stylish {product.name} from {product.brand}. {' and '.join(product.features[:2])}. Easy care fabric. Get yours for ${product.price}.",
+            f"{product.brand} {product.name} - {', '.join(product.features[:2]).lower()} design. Professional yet comfortable. Now ${product.price}.",
+            f"Upgrade your wardrobe with {product.brand} {product.name}. Features {' plus '.join(product.features[:2]).lower()}. ${product.price} with fast shipping."
+        ],
         
-        "dresses": f"Elegant {product.name} by {product.brand}. {' and '.join(product.features[:2])}. Perfect for work or weekend events. ${product.price} with free shipping.",
+        "dresses": [
+            f"Elegant {product.name} by {product.brand}. {' and '.join(product.features[:2])}. Perfect for work or weekend events. ${product.price} with free shipping.",
+            f"{product.brand} {product.name} - {', '.join(product.features[:2]).lower()}. Versatile style for any occasion. Special offer: ${product.price}.",
+            f"Beautiful {product.name} from {product.brand}. {' with '.join(product.features[:2]).lower()}. Effortlessly chic. Only ${product.price}.",
+            f"Turn heads in {product.brand} {product.name}. Featuring {' and '.join(product.features[:2]).lower()}. Perfect fit guaranteed. ${product.price}."
+        ],
         
-        "pants": f"{product.brand} {product.name} in multiple sizes. Key features: {', '.join(product.features[:2]).lower()}. Wrinkle-resistant fabric. Only ${product.price}.",
+        "pants": [
+            f"{product.brand} {product.name} in multiple sizes. Key features: {', '.join(product.features[:2]).lower()}. Wrinkle-resistant fabric. Only ${product.price}.",
+            f"Versatile {product.name} by {product.brand}. {' and '.join(product.features[:2])}. All-day comfort. Get them for ${product.price}.",
+            f"{product.brand} {product.name} - {', '.join(product.features[:2]).lower()}. Professional quality at ${product.price}.",
+            f"Premium {product.name} from {product.brand}. Features {' with '.join(product.features[:2]).lower()}. Easy care. Special price: ${product.price}."
+        ],
         
-        "accessories": f"Must-have {product.name} from {product.brand}. Crafted with {' and '.join(product.features[:2]).lower()}. Matches any outfit. Special price ${product.price}."
+        "accessories": [
+            f"Must-have {product.name} from {product.brand}. Crafted with {' and '.join(product.features[:2]).lower()}. Matches any outfit. Special price ${product.price}.",
+            f"Elevate your look with {product.brand} {product.name}. {' and '.join(product.features[:2])}. Timeless style. Only ${product.price}.",
+            f"{product.brand} {product.name} - {', '.join(product.features[:2]).lower()}. Perfect finishing touch. Get yours for ${product.price}.",
+            f"Statement {product.name} by {product.brand}. Features {' with '.join(product.features[:2]).lower()}. Quality craftsmanship. ${product.price}."
+        ]
     }
     
-    # Return specific template or default
-    return templates.get(product.category, f"Quality {product.brand} {product.name} featuring {' plus '.join(product.features[:2]).lower()}. Durable construction meets style. Get yours for ${product.price}.")
+    # Default templates if category not found
+    default_templates = [
+        f"Quality {product.brand} {product.name} featuring {' plus '.join(product.features[:2]).lower()}. Durable construction meets style. Get yours for ${product.price}.",
+        f"{product.brand} {product.name} - {', '.join(product.features[:2]).lower()}. Premium quality at an affordable price. Only ${product.price}.",
+        f"Discover {product.brand} {product.name}. {' and '.join(product.features[:2])}. Great value at ${product.price}.",
+        f"{product.name} by {product.brand}. Features {' with '.join(product.features[:2]).lower()}. Shop now for ${product.price}."
+    ]
+    
+    # Select random template from category or default
+    category_templates = templates_by_category.get(product.category, default_templates)
+    return random.choice(category_templates)
 
 # Additional endpoints for future expansion
 @app.post("/api/generate-product-tags")
